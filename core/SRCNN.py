@@ -6,7 +6,7 @@ import tensorflow as tf
 def SRCNN(input_var, option):
     
     with tf.variable_scope('SRCNN'):
-        x = input_var / 255.
+        x = input_var
 
         x = tf.layers.conv2d(inputs = x, **option['conv1'])
         x = tf.nn.relu(x)

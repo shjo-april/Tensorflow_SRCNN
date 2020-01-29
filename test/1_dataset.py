@@ -12,9 +12,13 @@ for image_path in image_paths:
     if image is None:
         print('[!] cv2.imread({})'.format(image_path))
         continue
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
     
     src_image = cv2.resize(image, None, fx = 1/scale, fy = 1/scale)
     src_image = cv2.resize(src_image, None, fx = scale, fy = scale)
+
+    print(src_image.min(), src_image.max())
 
     cv2.imshow('original image', image)
     cv2.imshow('resized image', src_image)

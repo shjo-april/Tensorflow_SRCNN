@@ -15,17 +15,25 @@ from utils.Timer import *
 
 class Teacher(Thread):
     
-    def __init__(self, train_data_list, batch_size, main_queue):
+    def __init__(self, option):
         Thread.__init__(self)
-
-        self.train = True
-        self.watch = StopWatch()
-        self.main_queue = main_queue
         
-        self.batch_size = batch_size
-        self.train_data_list = copy.deepcopy(train_data_list)
+        self.train = True
+        self.option = option
 
-        self.augment = RandAugment()
+        self.main_queue = option['main_queue']
+        
+        self.image_size = option['image_size']
+        self.batch_size = option['batch_size']
+
+        self.image_paths = option['image_paths']
+        self.resize_methods = [
+            cv2.INTER_NEAREST,
+            cv2.INTER_LINEAR,
+            cv2.INTER_AREA,
+            cv2.INTER_CUBIC,
+            cv2.INTER_LANCZOS4,
+        ]
         
     def run(self):
         while self.train:
@@ -36,17 +44,40 @@ class Teacher(Thread):
             batch_image_data = []
             batch_label_data = []
 
-            np.random.shuffle(self.train_data_list)
-            batch_data_list = self.train_data_list[:self.batch_size]
+            scale = random.randint(self.option['min_scale'], self.option['max_scale'])
 
-            for data in batch_data_list:
-                image, label = data
-                image = self.augment(image)
+            for i in range(self.batch_size * 4):
+                image_path = random.choice(self.image_paths)
 
-                batch_image_data.append(image)
-                batch_label_data.append(label)
+                gt_image = cv2.imread(image_path)
+                if gt_image is None:
+                    print('[!] cv2.imread({})'.format(image_path))
+                    continue
+                
+                gt_image = cv2.cvtColor(gt_image, cv2.COLOR_BGR2YCrCb)
 
-            batch_image_data = np.asarray(batch_image_data, dtype = np.float32)
-            batch_label_data = np.asarray(batch_label_data, dtype = np.float32)
+                resize_method = random.choice(self.resize_methods)
+                image = cv2.resize(gt_image, None, fx = 1/scale, fy = 1/scale, interpolation = resize_method)
+                image = cv2.resize(image, None, fx = scale, fy = scale, interpolation = resize_method)
+
+                h, w, c = image.shape
+                
+                for i in range(self.option['crop_per_image']):
+                    xmin = np.random.randint(0, w - self.image_size)
+                    ymin = np.random.randint(0, h - self.image_size)
+                    xmax = xmin + self.image_size
+                    ymax = ymin + self.image_size
+
+                    batch_image_data.append(image[ymin:ymax, xmin:xmax, :])
+                    batch_label_data.append(gt_image[ymin:ymax, xmin:xmax, :])
+
+                if len(batch_image_data) == self.batch_size:
+                    break
+
+            batch_image_data = np.asarray(batch_image_data, dtype = np.float32) / 255.
+            batch_label_data = np.asarray(batch_label_data, dtype = np.float32) / 255.
             
-            self.main_queue.put([batch_image_data, batch_label_data])
+            try:
+                self.main_queue.put_nowait([batch_image_data, batch_label_data])
+            except:
+                pass
