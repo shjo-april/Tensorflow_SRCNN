@@ -7,7 +7,7 @@
 
 - This is not officially code.
 
-## # Hardware specific
+## # Hardware
 - My desktop performance is Intel i7-9700K CPU, RTX 2080, and 32GB RAM.
 - I think Intel i5, GTX 1050, and 8GB RAM are enough for training my project.
 
