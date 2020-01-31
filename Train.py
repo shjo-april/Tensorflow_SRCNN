@@ -62,7 +62,10 @@ open(log_txt_path, 'w').close()
 ##########################################################################################################
 # 데이터셋을 불러옵니다.
 ##########################################################################################################
-image_paths = glob.glob('./dataset/train/*')
+train_dataset = []
+
+for image_path in glob.glob('./dataset/train/*'):
+    image = cv2.imread(image_path)
 
 log_print('# train length : {}'.format(len(image_paths)), log_txt_path)
 
