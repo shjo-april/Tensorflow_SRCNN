@@ -15,28 +15,23 @@ from queue import Queue
 from core.SRCNN import *
 
 from utils.Utils import *
-from utils.Teacher import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description='SRCNN', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--use_gpu', dest='use_gpu', help='use gpu', default='0', type=str)
     
-    parser.add_argument('--min_scale', dest='min_scale', help='min_scale', default=3, type=int)
-    parser.add_argument('--max_scale', dest='max_scale', help='max_scale', default=3, type=int)
-    parser.add_argument('--crop_per_image', dest='crop_per_image', help='crop_per_image', default=16, type=int)
+    parser.add_argument('--scale', dest='scale', help='scale', default=3, type=int)
+    parser.add_argument('--stride', dest='stride', help='stride', default=14, type=int)
     
     parser.add_argument('--image_size', dest='image_size', help='image_size', default=32, type=int)
     parser.add_argument('--batch_size', dest='batch_size', help='batch_size', default=128, type=int)
 
     parser.add_argument('--optimizer', dest='optimizer', help='optimizer', default='SGD', type=str)
-    parser.add_argument('--learning_rate', dest='learning_rate', help='learning_rate', default=1e-4, type=float)
+    parser.add_argument('--learning_rate', dest='learning_rate', help='learning_rate', default=1e-4, type=floastride
     
-    parser.add_argument('--num_threads', dest='num_threads', help='num_threads', default=6, type=int)
-    
-    parser.add_argument('--log_iteration', dest='log_iteration', help='log_iteration', default=100, type=int)
-    parser.add_argument('--save_iteration', dest='save_iteration', help='save_iteration', default=10000, type=int)
-    parser.add_argument('--max_iteration', dest='max_iteration', help='max_iteration', default=2550000, type=int)
+    parser.add_argument('--save_epoch', dest='save_epoch', help='save_epoch', default=100, type=int)
+    parser.add_argument('--max_epoch', dest='max_epoch', help='max_epoch', default=15000, type=int)
 
     return parser.parse_args()
 
@@ -47,7 +42,7 @@ args = vars(parse_args())
 
 os.environ["CUDA_VISIBLE_DEVICES"] = args['use_gpu']
 
-folder_name = 'SRCNN_image={}x{}_batch={}_optimizer={}_lr={}'.format(args['image_size'], args['image_size'], args['batch_size'], args['optimizer'], args['learning_rate'])
+folder_name = 'SRCNN_image={}x{}_batch={}_optimizer={}_lr={}_stride={}'.format(args['image_size'], args['image_size'], args['batch_size'], args['optimizer'], args['learning_rate'], args['stride'])
 
 model_dir = './experiments/model/{}/'.format(folder_name)
 ckpt_format = model_dir + '{}.ckpt'
@@ -62,8 +57,28 @@ open(log_txt_path, 'w').close()
 ##########################################################################################################
 # 데이터셋을 불러옵니다.
 ##########################################################################################################
-image_paths = glob.glob('./dataset/train/*')
+for image_path in  glob.glob('./dataset/train/*'):
+    image = cv2.imread(image_path)
+    if image is None:
+        print(image_path)
+        continue
 
+    h, w, c = image.shape
+
+    input = 
+
+    for x in range(0, h-args['image_size']+1, args['image_size']):
+        for y in range(0, w-args['image_size']+1, config.stride):
+            sub_input = input_[x:x+config.image_size, y:y+config.image_size] # [33 x 33]
+            sub_label = label_[x+int(padding):x+int(padding)+config.label_size, y+int(padding):y+int(padding)+config.label_size] # [21 x 21]
+
+            # Make channel value
+            sub_input = sub_input.reshape([config.image_size, config.image_size, 1])  
+            sub_label = sub_label.reshape([config.label_size, config.label_size, 1])
+
+            sub_input_sequence.append(sub_input)
+            sub_label_sequence.append(sub_label)
+            
 log_print('# train length : {}'.format(len(image_paths)), log_txt_path)
 
 ##########################################################################################################
@@ -136,7 +151,7 @@ train_ops = [train_op, loss_op, train_summary_op]
 loss_list = []
 train_time = time.time()
 
-for iter in range(1, args['max_iteration'] + 1):
+for iter in range(1, args['max_epoch'] + 1):
     batch_image_data, batch_label_data = main_queue.get()
 
     _feed_dict = {
@@ -157,7 +172,7 @@ for iter in range(1, args['max_iteration'] + 1):
         loss_lsit = []
         train_time = time.time()
 
-    if iter % args['save_iteration'] == 0:
+    if iter % args['save_epoch'] == 0:
         saver.save(sess, ckpt_format.format(iter))
 
 for th in train_threads:

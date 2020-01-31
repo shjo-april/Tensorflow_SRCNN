@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 class SRCNN:
-    def __init__(self, model_path, gpu_usage = 0.10, strides = (14, 14)):
+    def __init__(self, model_path, gpu_usage = 0.90, strides = (14, 14)):
 
         def load_graph(frozen_graph_filename):
             with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
@@ -24,7 +24,7 @@ class SRCNN:
         
         self.image_var = graph.get_tensor_by_name('prefix/images:0')
         self.predictions_op = graph.get_tensor_by_name('prefix/SRCNN/outputs:0')
-
+        
         shape = self.image_var.shape.as_list()
 
         self.x_stride, self.y_stride = strides
