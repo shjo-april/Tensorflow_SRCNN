@@ -71,7 +71,7 @@ class SRCNN:
         
         batch_images = np.asarray(batch_images, dtype = np.float32)
         return batch_images / 255.
-
+    
     def merge(self, pred_images, shape):
         h, w, c = shape
 
