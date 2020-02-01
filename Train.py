@@ -94,9 +94,8 @@ for image_path in  glob.glob('./dataset/train/*'):
             if not args['color']:
                 sub_image = sub_image[..., np.newaxis]
                 sub_label = sub_label[..., np.newaxis]
-
+            
             # print(sub_image.shape, sub_image.dtype)
-
             train_image_data.append(sub_image)
             train_label_data.append(sub_label)
 
@@ -152,7 +151,7 @@ for epoch in range(1, args['max_epoch'] + 1):
     
     loss_list = []
     train_time = time.time()
-    
+
     for iter in range(train_iteration):
         _feed_dict = {
             image_var : train_image_data[iter * args['batch_size'] : (iter + 1) * args['batch_size']],
@@ -162,7 +161,7 @@ for epoch in range(1, args['max_epoch'] + 1):
         train_writer.add_summary(summary, epoch * + iter)
 
         loss_list.append(loss)
-
+    
     loss = np.mean(loss_list)
     train_time = int(time.time() - train_time)
     
@@ -170,10 +169,6 @@ for epoch in range(1, args['max_epoch'] + 1):
     
     if epoch % args['save_epoch'] == 0:
         saver.save(sess, ckpt_format.format(epoch))
-
-for th in train_threads:
-    th.train = False
-    th.join()
 
 saver.save(sess, ckpt_format.format('end'))
 

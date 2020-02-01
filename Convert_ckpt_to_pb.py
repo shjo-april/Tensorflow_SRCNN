@@ -14,7 +14,7 @@ from tensorflow.python.summary import summary
 from tensorflow.python.framework import graph_util
 
 # define
-model_path = './experiments/model/SRCNN_image=32x32_batch=128_optimizer=SGD_lr=0.0001/end.ckpt'
+model_path = './experiments/model/SRCNN_image=32x32_color=True_optimizer=SGD_lr=0.0001_stride=14/2300.ckpt'
 
 pb_dir = './'
 pb_name = 'SRCNN.pb'
@@ -27,7 +27,7 @@ predictions_op = SRCNN(image_var, {
     
     'conv1' : dict(filters = 64, kernel_size = (9, 9), strides = 1, padding = 'same', name = 'conv1'),
     'conv2' : dict(filters = 32, kernel_size = (1, 1), strides = 1, padding = 'same', name = 'conv2'),
-    'conv3' : dict(filters = 3, kernel_size = (3, 3), strides = 1, padding = 'same', name = 'conv3'),
+    'conv3' : dict(filters = 3, kernel_size = (5, 5), strides = 1, padding = 'same', name = 'conv3'),
 })
 
 sess = tf.Session()

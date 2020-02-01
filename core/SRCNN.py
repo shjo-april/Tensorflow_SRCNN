@@ -17,7 +17,7 @@ def SRCNN(input_var, option):
         x = tf.layers.conv2d(inputs = x, **option['conv3'])
         
         if option['use_sigmoid']:
-            x = tf.math.sigmoid(x)
+            x = tf.math.sigmoid(x, name = 'outputs')
 
     return x
 

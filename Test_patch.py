@@ -39,51 +39,10 @@ class SRCNN:
     def split(self, image):
         h, w, c = image.shape
 
-        skip_w = w % self.width == 0
-        skip_h = h % self.height == 0
-
         batch_images = []
-
-        y = 0
-        while (y + self.height) < h:
-            x = 0
-            while (x + self.width) < w:
-                # demo_image = image.copy()
-                # cv2.rectangle(demo_image, (x, y), (x + self.width, y + self.height), (0, 255, 0), 2)
-                # cv2.imshow('show', demo_image)
-                # cv2.waitKey(0)
-
+        for y in range(0, h-self.height, self.y_stride):
+            for x in range(0, w-self.width, self.x_stride):
                 batch_images.append(image[y:y+self.height, x:x+self.width])
-                x += self.x_stride
-
-            if not skip_w:
-                # demo_image = image.copy()
-                # cv2.rectangle(demo_image, (x, y), (x + self.width, y + self.height), (0, 255, 0), 2)
-                # cv2.imshow('show', demo_image)
-                # cv2.waitKey(0)
-
-                batch_images.append(image[y:y+self.height, -self.width:])
-
-            y += self.y_stride
-        
-        if not skip_h:
-            x = 0
-            while (x + self.width) < w:
-                # demo_image = image.copy()
-                # cv2.rectangle(demo_image, (x, y), (x + self.width, y + self.height), (0, 255, 0), 2)
-                # cv2.imshow('show', demo_image)
-                # cv2.waitKey(0)
-                
-                batch_images.append(image[-self.height:, x:x+self.width])
-                x += self.x_stride
-            
-            if not skip_w:
-                # demo_image = image.copy()
-                # cv2.rectangle(demo_image, (x, y), (x + self.width, y + self.height), (0, 255, 0), 2)
-                # cv2.imshow('show', demo_image)
-                # cv2.waitKey(0)
-                
-                batch_images.append(image[-self.height:, -self.width:])
         
         batch_images = np.asarray(batch_images, dtype = np.float32)
         return batch_images / 255.
@@ -125,7 +84,9 @@ class SRCNN:
     def predict(self, image):
         batch_images = self.split(image)
         pred_images = self.sess.run(self.predictions_op, feed_dict = {self.image_var : batch_images})
-        return self.merge(pred_images * 255., image.shape)
+
+        batch_images, pred_images = batch_images * 255, pred_images * 255
+        return batch_images.astype(np.uint8), pred_images.astype(np.uint8)
 
 scale = 3
 model = SRCNN('./SRCNN.pb')
@@ -142,12 +103,19 @@ for image_path in glob.glob('./dataset/train/*'):
 
     test_image = cv2.resize(gt_image, None, fx = 1/scale, fy = 1/scale)
     test_image = cv2.resize(test_image, (w, h))
-    
-    # cv2.imshow('show', decode_image(gt_image))
-    # cv2.waitKey(0)
 
-    pred_image = model.predict(test_image)
+    bg_image = np.zeros((h, w, c), dtype = np.uint8)
+    bg_pred_image = np.zeros((h, w, c), dtype = np.uint8)
 
-    cv2.imshow('test', decode_image(test_image))
-    cv2.imshow('SRCNN', decode_image(pred_image))
-    cv2.waitKey(0)
+    images, pred_images = model.predict(test_image)
+
+    i = 0
+    for y in range(0, h-model.height, model.y_stride):
+        for x in range(0, w-model.width, model.x_stride):
+            bg_image[y:y+model.height, x:x+model.width] = images[i]
+            bg_pred_image[y:y+model.height, x:x+model.width] = pred_images[i]
+            i += 1
+            
+            cv2.imshow('Input', decode_image(bg_image))
+            cv2.imshow('SRCNN', decode_image(bg_pred_image))
+            cv2.waitKey(0)
