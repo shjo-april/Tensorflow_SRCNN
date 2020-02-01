@@ -152,7 +152,7 @@ for epoch in range(1, args['max_epoch'] + 1):
     
     loss_list = []
     train_time = time.time()
-
+    
     for iter in range(train_iteration):
         _feed_dict = {
             image_var : train_image_data[iter * args['batch_size'] : (iter + 1) * args['batch_size']],
@@ -162,7 +162,7 @@ for epoch in range(1, args['max_epoch'] + 1):
         train_writer.add_summary(summary, epoch * + iter)
 
         loss_list.append(loss)
-    
+
     loss = np.mean(loss_list)
     train_time = int(time.time() - train_time)
     
