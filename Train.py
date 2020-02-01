@@ -151,10 +151,10 @@ for iter in range(1, args['max_iteration'] + 1):
     if iter % args['log_iteration'] == 0:
         loss = np.mean(loss_list)
         train_time = int(time.time() - train_time)
-
+        
         log_print('[i] iter = {}, loss = {:.4f}, train_time = {}sec'.format(iter, loss, train_time), log_txt_path)
 
-        loss_lsit = []
+        loss_list = []
         train_time = time.time()
 
     if iter % args['save_iteration'] == 0:

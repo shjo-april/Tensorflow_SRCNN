@@ -14,20 +14,20 @@ from tensorflow.python.summary import summary
 from tensorflow.python.framework import graph_util
 
 # define
-model_path = './experiments/model/SRCNN_image=32x32_batch=256_optimizer=SGD_lr=0.0001/1880000.ckpt'
+model_path = './experiments/model/SRCNN_image=32x32_batch=128_optimizer=SGD_lr=0.0001/end.ckpt'
 
 pb_dir = './'
 pb_name = 'SRCNN.pb'
 
 # build SRCNN
-image_var = tf.placeholder(tf.float32, [None, 32, 32, 1], name = 'images')
+image_var = tf.placeholder(tf.float32, [None, 32, 32, 3], name = 'images')
 
 predictions_op = SRCNN(image_var, {
     'use_sigmoid' : True,
     
     'conv1' : dict(filters = 64, kernel_size = (9, 9), strides = 1, padding = 'same', name = 'conv1'),
     'conv2' : dict(filters = 32, kernel_size = (1, 1), strides = 1, padding = 'same', name = 'conv2'),
-    'conv3' : dict(filters = 1, kernel_size = (3, 3), strides = 1, padding = 'same', name = 'conv3'),
+    'conv3' : dict(filters = 3, kernel_size = (3, 3), strides = 1, padding = 'same', name = 'conv3'),
 })
 
 sess = tf.Session()

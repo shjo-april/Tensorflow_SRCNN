@@ -24,7 +24,7 @@ class SRCNN:
         
         self.image_var = graph.get_tensor_by_name('prefix/images:0')
         self.predictions_op = graph.get_tensor_by_name('prefix/SRCNN/outputs:0')
-        
+
         shape = self.image_var.shape.as_list()
 
         self.x_stride, self.y_stride = strides
@@ -37,7 +37,7 @@ class SRCNN:
         self.sess = tf.Session(graph = graph, config = config)
 
     def split(self, image):
-        h, w = image.shape
+        h, w, c = image.shape
 
         skip_w = w % self.width == 0
         skip_h = h % self.height == 0
@@ -70,18 +70,16 @@ class SRCNN:
                 batch_images.append(image[-self.height:, -self.width:])
         
         batch_images = np.asarray(batch_images, dtype = np.float32)
-        batch_images = batch_images[..., np.newaxis]
         return batch_images / 255.
 
-    def merge(self, pred_images, shape, image):
-        h, w = shape
+    def merge(self, pred_images, shape):
+        h, w, c = shape
 
         skip_w = w % self.width == 0
         skip_h = h % self.height == 0
 
         index = 0
-        merge_image = image.copy() # np.zeros((h, w, c), dtype = np.float32)
-        merge_image = merge_image[..., np.newaxis]
+        merge_image = np.zeros((h, w, c), dtype = np.float32)
 
         y = 0
         while (y + self.height) < h:
@@ -110,24 +108,25 @@ class SRCNN:
     
     def predict(self, image):
         batch_images = self.split(image)
-
         pred_images = self.sess.run(self.predictions_op, feed_dict = {self.image_var : batch_images})
 
-        return self.merge(pred_images * 255., image.shape, image)
+        return self.merge(pred_images * 255., image.shape)
 
 scale = 3
 model = SRCNN('./SRCNN.pb')
 
 def decode_image(image):
-    return image
+    return cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
 
 for image_path in glob.glob('./dataset/test/Set5/*'):
 # for image_path in glob.glob('./dataset/train/*'):
     gt_image = cv2.imread(image_path)
-    gt_image = cv2.cvtColor(gt_image, cv2.COLOR_BGR2GRAY)
+    gt_image = cv2.cvtColor(gt_image, cv2.COLOR_BGR2YCrCb)
     
+    h, w, c = gt_image.shape
+
     test_image = cv2.resize(gt_image, None, fx = 1/scale, fy = 1/scale)
-    test_image = cv2.resize(test_image, None, fx = scale, fy = scale)
+    test_image = cv2.resize(test_image, (w, h))
 
     # cv2.imshow('show', decode_image(gt_image))
     # cv2.waitKey(0)
