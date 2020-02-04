@@ -43,4 +43,4 @@ python test/Test.py
 
 ## # Reference
 - https://github.com/tegg89/SRCNN-Tensorflow
-- Image Super-Resolution Using Deep Convolutional Networks []
+- Image Super-Resolution Using Deep Convolutional Networks [[Paper]](https://arxiv.org/pdf/1501.00092.pdf)

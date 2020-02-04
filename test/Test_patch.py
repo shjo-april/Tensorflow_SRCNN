@@ -9,7 +9,7 @@ import tensorflow as tf
 
 class SRCNN:
     def __init__(self, model_path, gpu_usage = 0.90):
-
+        
         def load_graph(frozen_graph_filename):
             with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
                 graph_def = tf.GraphDef()
@@ -39,7 +39,10 @@ class SRCNN:
     def split(self, image):
         h, w, c = image.shape
 
+        h_count = 
+
         batch_images = []
+        for y in range(0, h - self.height, )
         for y in range(0, h-self.height, self.y_stride):
             for x in range(0, w-self.width, self.x_stride):
                 batch_images.append(image[y:y+self.height, x:x+self.width])
@@ -89,12 +92,11 @@ class SRCNN:
         return batch_images.astype(np.uint8), pred_images.astype(np.uint8)
 
 scale = 3
-model = SRCNN('./SRCNN.pb')
+model = SRCNN('./test/SRCNN.pb')
 
 # for image_path in glob.glob('./dataset/test/Set5/*'):
 for image_path in glob.glob('./dataset/train/*'):
     gt_image = cv2.imread(image_path)
-    gt_image = cv2.cvtColor(gt_image, cv2.COLOR_BGR2YCrCb)
     
     h, w, c = gt_image.shape
 
@@ -113,6 +115,6 @@ for image_path in glob.glob('./dataset/train/*'):
             bg_pred_image[y:y+model.height, x:x+model.width] = pred_images[i]
             i += 1
             
-            cv2.imshow('Input', decode_image(bg_image))
-            cv2.imshow('SRCNN', decode_image(bg_pred_image))
+            cv2.imshow('Input', bg_image)
+            cv2.imshow('SRCNN', bg_pred_image)
             cv2.waitKey(0)
