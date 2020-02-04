@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 class SRCNN:
-    def __init__(self, model_path, gpu_usage = 0.90, strides = (14, 14)):
+    def __init__(self, model_path, gpu_usage = 0.90):
 
         def load_graph(frozen_graph_filename):
             with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
@@ -27,8 +27,8 @@ class SRCNN:
 
         shape = self.image_var.shape.as_list()
 
-        self.x_stride, self.y_stride = strides
         _, self.height, self.width, _ = shape
+        self.x_stride, self.y_stride = self.width, self.height
         
         config = tf.ConfigProto()
         config.gpu_options.per_process_gpu_memory_fraction = gpu_usage
@@ -108,7 +108,7 @@ for image_path in glob.glob('./dataset/train/*'):
     bg_pred_image = np.zeros((h, w, c), dtype = np.uint8)
 
     images, pred_images = model.predict(test_image)
-
+    
     i = 0
     for y in range(0, h-model.height, model.y_stride):
         for x in range(0, w-model.width, model.x_stride):
