@@ -18,6 +18,8 @@ def SRCNN(input_var, option):
         
         if option['use_sigmoid']:
             x = tf.math.sigmoid(x, name = 'outputs')
+        else:
+            x = tf.identity(x, name = 'outputs')
 
     return x
 

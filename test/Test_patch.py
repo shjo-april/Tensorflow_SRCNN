@@ -91,9 +91,6 @@ class SRCNN:
 scale = 3
 model = SRCNN('./SRCNN.pb')
 
-def decode_image(image):
-    return cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
-
 # for image_path in glob.glob('./dataset/test/Set5/*'):
 for image_path in glob.glob('./dataset/train/*'):
     gt_image = cv2.imread(image_path)

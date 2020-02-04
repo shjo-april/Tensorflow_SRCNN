@@ -23,14 +23,14 @@ pip install -r requirements.txt
 - If you want to train SRCNN, you run the following command.
 
 ```
-python Train.py
+python Train_with_Thread.py
 ```
 
 - If you want to test SRCNN, you run the following commands.
 
 ```
 python Convert_ckpt_to_pb.py
-python Test.py
+python test/Test.py
 ```
 
 - If you want to train your dataset, you change training folder "./dataset/train/".
