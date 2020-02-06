@@ -28,11 +28,11 @@ class Teacher(Thread):
 
         self.image_paths = option['image_paths']
         self.resize_methods = [
-            cv2.INTER_NEAREST,
-            cv2.INTER_LINEAR,
-            cv2.INTER_AREA,
+            # cv2.INTER_NEAREST,
+            # cv2.INTER_LINEAR,
+            # cv2.INTER_AREA,
             cv2.INTER_CUBIC,
-            cv2.INTER_LANCZOS4,
+            # cv2.INTER_LANCZOS4,
         ]
         
     def run(self):

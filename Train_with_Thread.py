@@ -22,19 +22,19 @@ def parse_args():
 
     parser.add_argument('--use_gpu', dest='use_gpu', help='use gpu', default='0', type=str)
     
-    parser.add_argument('--min_scale', dest='min_scale', help='min_scale', default=2, type=int)
+    parser.add_argument('--min_scale', dest='min_scale', help='min_scale', default=5, type=int)
     parser.add_argument('--max_scale', dest='max_scale', help='max_scale', default=5, type=int)
-    parser.add_argument('--crop_per_image', dest='crop_per_image', help='crop_per_image', default=16, type=int)
+    parser.add_argument('--crop_per_image', dest='crop_per_image', help='crop_per_image', default=8, type=int)
     
     parser.add_argument('--image_size', dest='image_size', help='image_size', default=33, type=int)
     parser.add_argument('--batch_size', dest='batch_size', help='batch_size', default=128, type=int)
     
-    parser.add_argument('--optimizer', dest='optimizer', help='optimizer', default='Momentum', type=str)
+    parser.add_argument('--optimizer', dest='optimizer', help='optimizer', default='SGD', type=str)
     parser.add_argument('--learning_rate', dest='learning_rate', help='learning_rate', default=1e-4, type=float)
     
     parser.add_argument('--num_threads', dest='num_threads', help='num_threads', default=6, type=int)
     
-    parser.add_argument('--log_iteration', dest='log_iteration', help='log_iteration', default=100, type=int)
+    parser.add_argument('--log_iteration', dest='log_iteration', help='log_iteration', default=1000, type=int)
     parser.add_argument('--save_iteration', dest='save_iteration', help='save_iteration', default=10000, type=int)
     parser.add_argument('--max_iteration', dest='max_iteration', help='max_iteration', default=2550000, type=int)
 
@@ -47,7 +47,7 @@ args = vars(parse_args())
 
 os.environ["CUDA_VISIBLE_DEVICES"] = args['use_gpu']
 
-folder_name = 'SRCNN_image={}x{}_batch={}_optimizer={}_lr={}'.format(args['image_size'], args['image_size'], args['batch_size'], args['optimizer'], args['learning_rate'])
+folder_name = 'SRCNN_image={}x{}_scale={}_optimizer={}_lr={}'.format(args['image_size'], args['image_size'], args['max_scale'], args['optimizer'], args['learning_rate'])
 
 model_dir = './experiments/model/{}/'.format(folder_name)
 ckpt_format = model_dir + '{}.ckpt'
@@ -75,9 +75,9 @@ label_var = tf.placeholder(tf.float32, [None, args['image_size'], args['image_si
 predictions_op = SRCNN(image_var, {
     'use_sigmoid' : False,
     
-    'conv1' : dict(filters = 64, kernel_size = (9, 9), strides = 1, padding = 'same', kernel_initializer = tf.contrib.layers.xavier_initializer(), name = 'conv1'),
-    'conv2' : dict(filters = 32, kernel_size = (1, 1), strides = 1, padding = 'same', kernel_initializer = tf.contrib.layers.xavier_initializer(), name = 'conv2'),
-    'conv3' : dict(filters = 3, kernel_size = (5, 5), strides = 1, padding = 'same', kernel_initializer = tf.contrib.layers.xavier_initializer(), name = 'conv3'),
+    'conv1' : dict(filters = 64, kernel_size = (9, 9), strides = 1, padding = 'same', kernel_initializer = tf.random_normal_initializer(stddev = 1e-3), name = 'conv1'),
+    'conv2' : dict(filters = 32, kernel_size = (1, 1), strides = 1, padding = 'same', kernel_initializer = tf.random_normal_initializer(stddev = 1e-3), name = 'conv2'),
+    'conv3' : dict(filters = 3, kernel_size = (5, 5), strides = 1, padding = 'same', kernel_initializer = tf.random_normal_initializer(stddev = 1e-3), name = 'conv3'),
 })
 
 loss_op = tf.reduce_mean(tf.square(label_var - predictions_op))
@@ -140,6 +140,14 @@ train_time = time.time()
 
 for iter in range(1, args['max_iteration'] + 1):
     batch_image_data, batch_label_data = main_queue.get()
+
+    # for image, label in zip(batch_image_data, batch_label_data):
+    #     image = (image * 255.).astype(np.uint8)
+    #     label = (label * 255.).astype(np.uint8)
+
+    #     cv2.imshow('image', image)
+    #     cv2.imshow('label', label)
+    #     cv2.waitKey(0)
 
     _feed_dict = {
         image_var : batch_image_data,

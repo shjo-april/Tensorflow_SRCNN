@@ -28,7 +28,8 @@ class SRCNN:
         shape = self.image_var.shape.as_list()
 
         _, self.height, self.width, _ = shape
-        self.x_stride, self.y_stride = self.width, self.height
+        # self.x_stride, self.y_stride = self.width, self.height
+        self.x_stride, self.y_stride = 14, 14
         
         config = tf.ConfigProto()
         config.gpu_options.per_process_gpu_memory_fraction = gpu_usage
@@ -39,10 +40,7 @@ class SRCNN:
     def split(self, image):
         h, w, c = image.shape
 
-        h_count = 
-
         batch_images = []
-        for y in range(0, h - self.height, )
         for y in range(0, h-self.height, self.y_stride):
             for x in range(0, w-self.width, self.x_stride):
                 batch_images.append(image[y:y+self.height, x:x+self.width])
@@ -50,43 +48,11 @@ class SRCNN:
         batch_images = np.asarray(batch_images, dtype = np.float32)
         return batch_images / 255.
     
-    def merge(self, pred_images, shape):
-        h, w, c = shape
-
-        skip_w = w % self.width == 0
-        skip_h = h % self.height == 0
-
-        index = 0
-        merge_image = np.zeros((h, w, c), dtype = np.float32)
-
-        y = 0
-        while (y + self.height) < h:
-            x = 0
-            while (x + self.width) < w:
-                merge_image[y:y+self.height, x:x+self.width, :] = pred_images[index]; index += 1
-
-                x += self.x_stride
-
-            if not skip_w:
-                merge_image[y:y+self.height, -self.width:, :] = pred_images[index]; index += 1
-
-            y += self.y_stride
-
-        if not skip_h:
-            x = 0
-            while (x + self.width) < w:
-                merge_image[-self.height:, x:x+self.width, :] = pred_images[index]; index += 1
-                x += self.x_stride
-
-            if not skip_w:
-                merge_image[-self.height:, -self.width:, :] = pred_images[index]; index += 1
-        
-        merge_image = np.asarray(merge_image, dtype = np.uint8)
-        return merge_image
-    
     def predict(self, image):
         batch_images = self.split(image)
+
         pred_images = self.sess.run(self.predictions_op, feed_dict = {self.image_var : batch_images})
+        pred_images = np.maximum(np.minimum(pred_images, 1.), 0.)
 
         batch_images, pred_images = batch_images * 255, pred_images * 255
         return batch_images.astype(np.uint8), pred_images.astype(np.uint8)
@@ -97,7 +63,9 @@ model = SRCNN('./test/SRCNN.pb')
 # for image_path in glob.glob('./dataset/test/Set5/*'):
 for image_path in glob.glob('./dataset/train/*'):
     gt_image = cv2.imread(image_path)
-    
+    h, w, c = gt_image.shape
+
+    gt_image = gt_image[:-(h % model.y_stride), :-(w % model.x_stride), :]
     h, w, c = gt_image.shape
 
     test_image = cv2.resize(gt_image, None, fx = 1/scale, fy = 1/scale)
@@ -105,8 +73,10 @@ for image_path in glob.glob('./dataset/train/*'):
 
     bg_image = np.zeros((h, w, c), dtype = np.uint8)
     bg_pred_image = np.zeros((h, w, c), dtype = np.uint8)
-
+    
     images, pred_images = model.predict(test_image)
+
+    cv2.imshow('GT', gt_image)
     
     i = 0
     for y in range(0, h-model.height, model.y_stride):
